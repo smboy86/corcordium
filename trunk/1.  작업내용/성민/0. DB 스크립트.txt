@@ -1,0 +1,147 @@
+
+# DB 접속방법
+[PHP]
+$connect=mysql_connect("db.corcordium.co.kr","corcordium","cor35613562");
+$db=mysql_select_db("dbcorcordium",$connect);
+
+
+[Toad for MySQL]
+Connection type : TCP
+HOST : db.corcordium.co.kr
+User : corcordium
+Pw : cor35613562
+Port : 3306
+
+
+
+## MySQL 시퀀스 생성
+
+1) 시퀀스용 테이블 생성
+CREATE TABLE sys_sequence ( name varchar(32), currval BIGINT UNSIGNED ) ENGINE=MyISAM;
+
+2) 시퀀스 프로시져 생성
+DELIMITER $$
+ CREATE PROCEDURE `create_sequence`(IN the_name text)
+ MODIFIES SQL DATA
+ DETERMINISTIC
+ BEGIN
+     DELETE FROM sys_sequence WHERE name=the_name;
+     INSERT INTO sys_sequence VALUES (the_name, 0);
+ END
+
+3) 시퀀스 프로시져 등록
+ call create_sequence('sync_seq');
+
+ 4) 호출 펑션 생성
+ DELIMITER $$
+ CREATE FUNCTION `nextval`(the_name varchar(32))
+ RETURNS BIGINT UNSIGNED
+ MODIFIES SQL DATA
+ DETERMINISTIC
+ BEGIN
+     DECLARE ret BIGINT UNSIGNED;
+     UPDATE sys_sequence SET currval=currval+1 WHERE name=the_name;
+     SELECT currval INTO ret FROM sys_sequence WHERE name=the_name limit 1;
+     RETURN ret;
+ END
+
+ 5) 실행 확인 (사용예)
+ select nextval('sync_seq') from dual;
+
+
+
+
+
+
+
+
+
+
+1. 테이블 생성  
+ 1)(dbcorcordium 데이터베이스에 cor_info 테이블)
+CREATE TABLE `dbcorcordium`.`cor_info` 
+(`id` INT(8) AUTO_INCREMENT PRIMARY KEY COMMENT '아이디'
+, `start_date` VARCHAR(14) NOT NULL COMMENT '공연시작시간'
+, `end_date` VARCHAR(14) NOT NULL COMMENT '공연마감시간'
+, `show_title` VARCHAR(250) NOT NULL COMMENT '공연제목'
+, `theater_nm` VARCHAR(250) NOT NULL COMMENT '공연장이름'
+, `theater_title` VARCHAR(250) NOT NULL COMMENT '극단이름'
+, `directer_nm` VARCHAR(250) NOT NULL COMMENT '작연출이름'
+, `reservation_url` VARCHAR(100) NOT NULL COMMENT '예매링크'
+, `content_url` VARCHAR(100) NOT NULL COMMENT '티스토리링크_컨텐츠'
+, `content_nm` VARCHAR(100) NOT NULL COMMENT '컨텐츠명'
+, `img_url` VARCHAR(100) NOT NULL COMMENT '이미지링크'
+, `reg_id` VARCHAR(25) NOT NULL COMMENT '작성자'
+, `reg_dt` VARCHAR(14) NOT NULL COMMENT '작성일시'
+, `mod_id` VARCHAR(25) NOT NULL COMMENT '수정자'
+, `mod_dt` VARCHAR(14) NOT NULL COMMENT '수정일시'
+, `sts` CHAR(1) NOT NULL DEFAULT 'C' COMMENT '상태'
+, `rem` VARCHAR(250)
+);
+
+2)(dbcorcordium 데이터베이스에 cor_sync_test 테이블)
+
+CREATE TABLE `dbcorcordium`.`cor_sync_test` 
+(`id` INT(8) AUTO_INCREMENT PRIMARY KEY COMMENT '아이디'
+, `title` VARCHAR(100) NOT NULL COMMENT '포스트 제목'
+, `post_url` VARCHAR(100) NOT NULL COMMENT '포스트 URL'
+, `visibility` VARCHAR(100) NOT NULL COMMENT '숨김여부'
+, `category_id` VARCHAR(100) NOT NULL COMMENT '카테고리아이디'
+, `date` VARCHAR(100) NOT NULL COMMENT '수정일시'
+, `temp` VARCHAR(100) NOT NULL COMMENT '임시칼럼'
+, `reg_id` VARCHAR(30) NOT NULL COMMENT '작성자'
+, `reg_dt` VARCHAR(14) NOT NULL COMMENT '작성일시'
+, `mod_id` VARCHAR(25) NOT NULL COMMENT '수정자'
+, `mod_dt` VARCHAR(14) NOT NULL COMMENT '수정일시'
+, `sts` CHAR(1) NOT NULL DEFAULT 'C' COMMENT '상태'
+, `rem` VARCHAR(250)
+);
+
+
+
+
+
+
+
+2. 임시 데이터 생성
+
+INSERT INTO `corcordium`.`corcordium_info` (
+`start_date` ,
+`end_date` ,
+`show_title` ,
+`theater_nm` ,
+`theater_title` ,
+`directer_nm` ,
+`reservation_url` ,
+`content_url` ,
+`content_nm` ,
+`img_url` ,
+`reg_id` ,
+`reg_dt` ,
+`mod_id` ,
+`mod_dt` ,
+`sts` ,
+`rem` 
+)
+VALUES (
+'20150118181100' 
+, '20150130181100'
+, '청춘여행자'
+, '극단 여행자'
+, '동숭무대 소극장'
+, '작_김지선 연출_이준우'
+, 'http://www.naver.com'
+, 'http://corcordium.tistory.com/entry/극단-여행자청춘-여행자'
+, '극단 여행자_청춘 여행자', 'http://www.daum.com'
+, 'root'
+, '20150118181400'
+, 'root'
+, '20150118181400'
+, 'C'
+, '' 
+) 
+
+
+
+;
+
